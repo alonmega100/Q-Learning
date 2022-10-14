@@ -36,8 +36,9 @@ class Game:
         pygame.display.set_caption("Mario 2d World")
         self.running = True
         self.score = 0
+        self.board_size = (5, 3)
 
-        self.map_squares = [[None for y in range(3)] for x in range(5)]
+        self.map_squares = [[None for y in range(self.board_size[1])] for x in range(self.board_size[0])]
 
     def create_units(self):
         mario = Ally()
@@ -45,32 +46,40 @@ class Game:
         coopa_troopa = Enemy()
         goomba = Enemy()
         coin = Reward()
+        star = Reward()
 
         mario.set_image("../DATA/mario.png")
         bowser.set_image("../DATA/Enemies/Bowser.png")
         coopa_troopa.set_image("../DATA/Enemies/Koopa_Troopa.png")
         goomba.set_image("../DATA/Enemies/Goomba.png")
         coin.set_image("../DATA/coin.png")
+        star.set_image("../DATA/star.png")
 
         mario.set_square((0, 0))
         bowser.set_square((4, 1))
-        coin.set_square((4, 2))
         coopa_troopa.set_square((1, 2))
         goomba.set_square((2, 0))
+        coin.set_square((4, 2))
+        star.set_square((4, 0))
 
         self.map_squares[0][0] = mario
         self.map_squares[4][1] = bowser
-        self.map_squares[4][2] = coin
         self.map_squares[1][2] = coopa_troopa
         self.map_squares[2][0] = goomba
+        self.map_squares[4][2] = coin
+        self.map_squares[4][0] = star
+
 
         self.units.append(mario)
         self.units.append(bowser)
         self.units.append(coopa_troopa)
         self.units.append(goomba)
         self.units.append(coin)
+        self.units.append(star)
 
         return mario
+    # def remove_unit(self, unit):
+    #     self.map_squares
 
     def run(self):
         pygame.init()
@@ -92,6 +101,7 @@ class Game:
                             elif type(self.map_squares[new_square[0]][new_square[1]]).__name__ == "Reward":
                                 self.score += 3
                                 print("Horray!!")
+                                self.map_squares[new_square[0]][new_square[1]] = None
                             mario.set_square(new_square)
                     elif event.key == pygame.K_RIGHT:
                         temp = mario.get_square()
@@ -102,6 +112,7 @@ class Game:
                             elif type(self.map_squares[new_square[0]][new_square[1]]).__name__ == "Reward":
                                 self.score += 3
                                 print("Horray!!")
+                                self.map_squares[new_square[0]][new_square[1]] = None
                             mario.set_square(new_square)
                     elif event.key == pygame.K_UP:
                         temp = mario.get_square()
@@ -112,6 +123,8 @@ class Game:
                             elif type(self.map_squares[new_square[0]][new_square[1]]).__name__ == "Reward":
                                 self.score += 3
                                 print("Horray!!")
+                                self.map_squares[new_square[0]][new_square[1]] = None
+
                             mario.set_square(new_square)
                     elif event.key == pygame.K_LEFT:
                         temp = mario.get_square()
@@ -122,10 +135,16 @@ class Game:
                             elif type(self.map_squares[new_square[0]][new_square[1]]).__name__ == "Reward":
                                 self.score += 3
                                 print("Horray!!")
+                                self.map_squares[new_square[0]][new_square[1]] = None
                             mario.set_square(new_square)
 
-            for units in self.units:
-                units.draw(self.screen)
+            for y in range(self.board_size[1]):
+                for x in range(self.board_size[0]):
+                    if self.map_squares[x][y] is None:
+                        pass
+                    else:
+                        self.map_squares[x][y].draw(self.screen)
+
             pygame.display.update()
         pygame.quit()
 
