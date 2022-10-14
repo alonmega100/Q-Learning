@@ -35,6 +35,8 @@ class Game:
         self.screen = pygame.display.set_mode(Game.SIZE)
         pygame.display.set_caption("Mario 2d World")
         self.running = True
+        self.score = 0
+
         self.map_squares = [[None for y in range(3)] for x in range(5)]
 
     def create_units(self):
@@ -85,21 +87,41 @@ class Game:
                         temp = mario.get_square()
                         if temp[1] != 2:
                             new_square = (temp[0], temp[1]+1)
+                            if type(self.map_squares[new_square[0]][new_square[1]]).__name__ == "Enemy":
+                                self.running = False
+                            elif type(self.map_squares[new_square[0]][new_square[1]]).__name__ == "Reward":
+                                self.score += 3
+                                print("Horray!!")
                             mario.set_square(new_square)
                     elif event.key == pygame.K_RIGHT:
                         temp = mario.get_square()
                         if temp[0] != 4:
                             new_square = (temp[0]+1, temp[1])
+                            if type(self.map_squares[new_square[0]][new_square[1]]).__name__ == "Enemy":
+                                self.running = False
+                            elif type(self.map_squares[new_square[0]][new_square[1]]).__name__ == "Reward":
+                                self.score += 3
+                                print("Horray!!")
                             mario.set_square(new_square)
                     elif event.key == pygame.K_UP:
                         temp = mario.get_square()
                         if temp[1] != 0:
                             new_square = (temp[0], temp[1]-1)
+                            if type(self.map_squares[new_square[0]][new_square[1]]).__name__ == "Enemy":
+                                self.running = False
+                            elif type(self.map_squares[new_square[0]][new_square[1]]).__name__ == "Reward":
+                                self.score += 3
+                                print("Horray!!")
                             mario.set_square(new_square)
                     elif event.key == pygame.K_LEFT:
                         temp = mario.get_square()
                         if temp[0] != 0:
                             new_square = (temp[0]-1, temp[1])
+                            if type(self.map_squares[new_square[0]][new_square[1]]).__name__ == "Enemy":
+                                self.running = False
+                            elif type(self.map_squares[new_square[0]][new_square[1]]).__name__ == "Reward":
+                                self.score += 3
+                                print("Horray!!")
                             mario.set_square(new_square)
 
             for units in self.units:
@@ -119,7 +141,7 @@ class Unit:
     def __init__(self):
         self.square = (0, 0)
         self.position = (0, 0)
-
+        self.type = None
         self.image_path = None
         self.image = None
 
@@ -138,6 +160,9 @@ class Unit:
         self.square = square
         self.set_position()
 
+    def get_square(self):
+        return self.square
+
     def set_position(self, position=None):
         if position is not None:
             self.position = position
@@ -150,8 +175,6 @@ class Ally(Unit):
     def __init__(self):
         Unit.__init__(self)
 
-    def get_square(self):
-        return self.square
 
 class Enemy(Unit):
     def __init__(self):
