@@ -1,23 +1,24 @@
+import random
 import time
 import pygame
 import numpy as np
 
 SQUARES = {
-    (0, 0): (50, 50),
-    (1, 0): (250, 50),
-    (0, 1): (50, 250),
-    (0, 2): (50, 450),
-    (1, 1): (250, 250),
-    (2, 0): (450, 50),
-    (3, 0): (650, 50),
-    (2, 1): (450, 250),
-    (1, 2): (250, 450),
-    (2, 2): (450, 450),
-    (3, 1): (650, 250),
-    (4, 0): (850, 50),
-    (4, 1): (850, 250),
-    (3, 2): (650, 450),
-    (4, 2): (850, 450),
+    (0, 0): ((50, 50), 0),
+    (1, 0): ((250, 50), 1),
+    (0, 1): ((50, 250), 2),
+    (0, 2): ((50, 450), 3),
+    (1, 1): ((250, 250), 4),
+    (2, 0): ((450, 50), 5),
+    (3, 0): ((650, 50), 6),
+    (2, 1): ((450, 250), 7),
+    (1, 2): ((250, 450), 8),
+    (2, 2): ((450, 450), 9),
+    (3, 1): ((650, 250), 10),
+    (4, 0): ((850, 50), 11),
+    (4, 1): ((850, 250), 12),
+    (3, 2): ((650, 450), 13),
+    (4, 2): ((850, 450), 14),
     }
 
 AGENT_RIGHT = pygame.USEREVENT + 1
@@ -34,7 +35,6 @@ class Game:
 
     SIZE = (W, H)
 
-
     def __init__(self):
         self.image = None
         self.rect = None
@@ -47,7 +47,6 @@ class Game:
         self.map_squares = [[None for y in range(self.board_size[1])] for x in range(self.board_size[0])]
 
         self.agent = Agent()
-
 
     def create_units(self):
         mario = Ally()
@@ -102,10 +101,12 @@ class Game:
         pygame.init()
         mario = self.create_units()
         self.load_image(self.FILE)
+        clock = pygame.time.Clock()
+
         while self.running:
 
             self.screen.blit(self.image, self.rect)
-
+            self.agent.set_square(mario.get_square())
             pygame.event.post(pygame.event.Event(self.agent.take_action()))
             for event in pygame.event.get():
                 new_square = None
@@ -139,31 +140,59 @@ class Game:
                     if temp[0] != 4:
                         new_square = (temp[0] + 1, temp[1])
                         mario.set_square(new_square)
+                        self.agent.score -= 1
+                        self.agent.last_reward = -1
+
+                    else:
+                        self.agent.score -= 2
+                        self.agent.last_reward = -2
                 elif event.type == AGENT_LEFT:
                     temp = mario.get_square()
                     if temp[0] != 0:
                         new_square = (temp[0] - 1, temp[1])
                         mario.set_square(new_square)
+                        self.agent.score -= 1
+                        self.agent.last_reward = -1
+
+                    else:
+                        self.agent.score -= 2
+                        self.agent.last_reward = -2
                 elif event.type == AGENT_UP:
                     temp = mario.get_square()
                     if temp[1] != 0:
                         new_square = (temp[0], temp[1] - 1)
                         mario.set_square(new_square)
+                        self.agent.score -= 1
+                        self.agent.last_reward = -1
+
+                    else:
+                        self.agent.score -= 2
+                        self.agent.last_reward = -2
 
                 elif event.type == AGENT_DOWN:
                     temp = mario.get_square()
                     if temp[1] != 2:
                         new_square = (temp[0], temp[1] + 1)
                         mario.set_square(new_square)
+                        self.agent.score -= 1
+                        self.agent.last_reward = -1
+
+                    else:
+                        self.agent.score -= 2
+                        self.agent.last_reward = -2
                 if new_square is not None:
                     if type(self.map_squares[new_square[0]][new_square[1]]).__name__ == "Exit":
-                        self.score += self.map_squares[new_square[0]][new_square[1]].get_value()
-                        self.running= False
+                        self.agent.score += self.map_squares[new_square[0]][new_square[1]].get_value()
+                        self.agent.last_reward = self.map_squares[new_square[0]][new_square[1]].get_value()
+                        self.agent.reset()
                     elif type(self.map_squares[new_square[0]][new_square[1]]).__name__ == "Enemy":
-                        self.score += self.map_squares[new_square[0]][new_square[1]].get_value()
-                        self.running= False
+                        self.agent.score += self.map_squares[new_square[0]][new_square[1]].get_value()
+                        self.agent.last_reward = self.map_squares[new_square[0]][new_square[1]].get_value()
+                        self.agent.reset()
                     elif type(self.map_squares[new_square[0]][new_square[1]]).__name__ == "Reward":
-                        self.score += self.map_squares[new_square[0]][new_square[1]].get_value()
+
+                        self.agent.score += self.map_squares[new_square[0]][new_square[1]].get_value()
+                        self.agent.last_reward = self.map_squares[new_square[0]][new_square[1]].get_value()
                         print("Horray!!")
                         print(self.score)
                         self.map_squares[new_square[0]][new_square[1]] = None
@@ -174,8 +203,9 @@ class Game:
                         pass
                     else:
                         self.map_squares[x][y].draw(self.screen)
-
+            self.agent.update()
             pygame.display.update()
+            clock.tick(1)
         print(self.score)
         pygame.quit()
 
@@ -190,16 +220,43 @@ class Game:
 class Agent:
     def __init__(self):
         self.q_table = np.zeros((15, 4))
+        # self.q_table[0] = [1,2,6,4]
+        self.square = None
+        self.last_reward = 0
+        self.score = 0
+        self.last_action = 0
+        self.last_state = None
+
+    def set_square(self, square):
+        self.square = square
+
+    def reset(self):
+        self.score = 0
+        self.square = (0, 0)
 
     def take_action(self):
+        eps = 0.1
+        print(self.q_table)
+        p = np.random.random()
+        actions = [AGENT_UP, AGENT_DOWN, AGENT_RIGHT, AGENT_LEFT]
 
-        return AGENT_RIGHT
+        if p < eps:
+            j = np.random.choice(4)
+        else:
+            j = np.argmax(self.q_table[SQUARES[self.square][1]])
+            print(j)
+            print(self.q_table[SQUARES[self.square][1]])
+        self.last_action = j
+        self.last_state = self.square
+        return actions[j]
+
+    def update(self):
+        self.q_table[self.last_state, self.last_action] = self.last_reward
 
     # AGENT_RIGHT = pygame.USEREVENT + 1
     # AGENT_UP = pygame.USEREVENT + 2
     # AGENT_DOWN = pygame.USEREVENT + 3
     # AGENT_LEFT = pygame.USEREVENT + 4
-
 
 
 class Unit:
@@ -234,7 +291,7 @@ class Unit:
             self.position = position
 
         else:
-            self.position = SQUARES[self.square]
+            self.position = SQUARES[self.square][0]
 
     def get_value(self):
         return self.value
@@ -257,7 +314,7 @@ class Enemy(Unit):
 class Reward(Unit):
     def __init__(self):
         Unit.__init__(self)
-        self.value = 1
+        self.value = 5
 
 
 class Exit(Unit):

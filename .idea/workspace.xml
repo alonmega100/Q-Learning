@@ -33,7 +33,7 @@
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "last_opened_file_path": "C:/Users/alon1/PycharmProjects/AiLab",
-    "settings.editor.selected.configurable": "preferences.editor"
+    "settings.editor.selected.configurable": "preferences.lookFeel"
   }
 }]]></component>
   <component name="RunManager" selected="Python.game (1)">
@@ -104,7 +104,6 @@
       <list>
         <item itemvalue="Python.game (1)" />
         <item itemvalue="Python.main" />
-        <item itemvalue="Python.Pygame" />
       </list>
     </recent_temporary>
   </component>
