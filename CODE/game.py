@@ -58,7 +58,6 @@ class Game:
         coin3 = Reward()
         pipe = Exit()
 
-
         mario.set_image("../DATA/mario.png")
         bowser.set_image("../DATA/Enemies/Bowser.png")
         coopa_troopa.set_image("../DATA/Enemies/Koopa_Troopa.png")
@@ -69,8 +68,8 @@ class Game:
         pipe.set_image("../DATA/pipe.png")
 
         mario.set_square((0, 1))
-        bowser.set_square((4, 1))
-        coopa_troopa.set_square((1, 2))
+        bowser.set_square((3, 1))
+        coopa_troopa.set_square((1, 1))
         goomba.set_square((2, 0))
         coin1.set_square((4, 2))
         coin2.set_square((2, 2))
@@ -78,8 +77,8 @@ class Game:
         pipe.set_square((4, 0))
 
         self.map_squares[0][0] = mario
-        self.map_squares[4][1] = bowser
-        self.map_squares[1][2] = coopa_troopa
+        self.map_squares[3][1] = bowser
+        self.map_squares[1][1] = coopa_troopa
         self.map_squares[2][0] = goomba
         self.map_squares[4][2] = coin1
         self.map_squares[2][2] = coin2
@@ -98,104 +97,102 @@ class Game:
         return mario
 
     def run(self):
+        log_path = []
         pygame.init()
         mario = self.create_units()
         self.load_image(self.FILE)
         clock = pygame.time.Clock()
-
+        first_run = True
         while self.running:
 
             self.screen.blit(self.image, self.rect)
             self.agent.set_square(mario.get_square())
-            pygame.event.post(pygame.event.Event(self.agent.take_action()))
+            if first_run:
+                first_run = False
+            else:
+                pygame.event.post(pygame.event.Event(self.agent.take_action()))
             for event in pygame.event.get():
-                new_square = None
+
                 if event.type == pygame.QUIT:
                     self.running = False
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_DOWN:
-                        temp = mario.get_square()
-                        if temp[1] != 2:
-                            new_square = (temp[0], temp[1]+1)
 
-                            mario.set_square(new_square)
-                    elif event.key == pygame.K_RIGHT:
-                        temp = mario.get_square()
-                        if temp[0] != 4:
-                            new_square = (temp[0]+1, temp[1])
-                            mario.set_square(new_square)
-                    elif event.key == pygame.K_UP:
-                        temp = mario.get_square()
-                        if temp[1] != 0:
-                            new_square = (temp[0], temp[1]-1)
-                            mario.set_square(new_square)
-                    elif event.key == pygame.K_LEFT:
-                        temp = mario.get_square()
-                        if temp[0] != 0:
-                            new_square = (temp[0]-1, temp[1])
-                            mario.set_square(new_square)
+                elif event.type == AGENT_UP or event.type == AGENT_DOWN or event.type == AGENT_RIGHT \
+                        or event.type == AGENT_LEFT or event.type == pygame.KEYDOWN:
+                    current_square = mario.get_square()
+                    new_square = mario.get_square()
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_DOWN:
+                            temp = mario.get_square()
+                            if temp[1] != 2:
+                                new_square = (temp[0], temp[1]+1)
+                                mario.set_square(new_square)
+                        elif event.key == pygame.K_RIGHT:
+                            temp = mario.get_square()
+                            if temp[0] != 4:
+                                new_square = (temp[0]+1, temp[1])
+                                mario.set_square(new_square)
+                        elif event.key == pygame.K_UP:
+                            temp = mario.get_square()
+                            if temp[1] != 0:
+                                new_square = (temp[0], temp[1]-1)
+                                mario.set_square(new_square)
+                        elif event.key == pygame.K_LEFT:
+                            temp = mario.get_square()
+                            if temp[0] != 0:
+                                new_square = (temp[0]-1, temp[1])
+                                mario.set_square(new_square)
 
-                elif event.type == AGENT_RIGHT:
-                    temp = mario.get_square()
-                    if temp[0] != 4:
-                        new_square = (temp[0] + 1, temp[1])
+                    elif event.type == AGENT_RIGHT:
+                        log_path.append(current_square)
+                        log_path.append(2)
+                        if current_square[0] != 4:
+                            new_square = (current_square[0] + 1, current_square[1])
+
+                    elif event.type == AGENT_LEFT:
+                        log_path.append(mario.get_square())
+                        log_path.append(3)
+                        if current_square[0] != 0:
+                            new_square = (current_square[0] - 1, current_square[1])
+
+                    elif event.type == AGENT_UP:
+                        log_path.append(mario.get_square())
+                        log_path.append(0)
+                        if current_square[1] != 0:
+                            new_square = (current_square[0], current_square[1] - 1)
+
+                    elif event.type == AGENT_DOWN:
+                        log_path.append(mario.get_square())
+                        log_path.append(1)
+                        if current_square[1] != 2:
+                            new_square = (current_square[0], current_square[1] + 1)
+
+                    if new_square != current_square:
                         mario.set_square(new_square)
-                        self.agent.score -= 1
-                        self.agent.last_reward = -1
+                        if type(self.map_squares[new_square[0]][new_square[1]]).__name__ == "Exit":
+                            log_path.append(self.map_squares[new_square[0]][new_square[1]].get_value())
+                            mario = self.create_units()
+                            self.agent.update(log_path)
+                            first_run = True
 
-                    else:
-                        self.agent.score -= 2
-                        self.agent.last_reward = -2
-                elif event.type == AGENT_LEFT:
-                    temp = mario.get_square()
-                    if temp[0] != 0:
-                        new_square = (temp[0] - 1, temp[1])
+                        elif type(self.map_squares[new_square[0]][new_square[1]]).__name__ == "Enemy":
+                            log_path.append(self.map_squares[new_square[0]][new_square[1]].get_value())
+                            mario = self.create_units()
+                            self.agent.update(log_path)
+                            first_run = True
+
+                        elif type(self.map_squares[new_square[0]][new_square[1]]).__name__ == "Reward":
+
+                            log_path.append(self.map_squares[new_square[0]][new_square[1]].get_value())
+                            self.map_squares[new_square[0]][new_square[1]] = None
+                            self.agent.update(log_path)
+                        else:  # New square is a black space
+                            log_path.append(-1)
+                            self.agent.update(log_path)
+
+                    else:  # Agent bumped into the wall
                         mario.set_square(new_square)
-                        self.agent.score -= 1
-                        self.agent.last_reward = -1
-
-                    else:
-                        self.agent.score -= 2
-                        self.agent.last_reward = -2
-                elif event.type == AGENT_UP:
-                    temp = mario.get_square()
-                    if temp[1] != 0:
-                        new_square = (temp[0], temp[1] - 1)
-                        mario.set_square(new_square)
-                        self.agent.score -= 1
-                        self.agent.last_reward = -1
-
-                    else:
-                        self.agent.score -= 2
-                        self.agent.last_reward = -2
-
-                elif event.type == AGENT_DOWN:
-                    temp = mario.get_square()
-                    if temp[1] != 2:
-                        new_square = (temp[0], temp[1] + 1)
-                        mario.set_square(new_square)
-                        self.agent.score -= 1
-                        self.agent.last_reward = -1
-
-                    else:
-                        self.agent.score -= 2
-                        self.agent.last_reward = -2
-                if new_square is not None:
-                    if type(self.map_squares[new_square[0]][new_square[1]]).__name__ == "Exit":
-                        self.agent.score += self.map_squares[new_square[0]][new_square[1]].get_value()
-                        self.agent.last_reward = self.map_squares[new_square[0]][new_square[1]].get_value()
-                        self.agent.reset()
-                    elif type(self.map_squares[new_square[0]][new_square[1]]).__name__ == "Enemy":
-                        self.agent.score += self.map_squares[new_square[0]][new_square[1]].get_value()
-                        self.agent.last_reward = self.map_squares[new_square[0]][new_square[1]].get_value()
-                        self.agent.reset()
-                    elif type(self.map_squares[new_square[0]][new_square[1]]).__name__ == "Reward":
-
-                        self.agent.score += self.map_squares[new_square[0]][new_square[1]].get_value()
-                        self.agent.last_reward = self.map_squares[new_square[0]][new_square[1]].get_value()
-                        print("Horray!!")
-                        print(self.score)
-                        self.map_squares[new_square[0]][new_square[1]] = None
+                        log_path.append(-2)
+                        self.agent.update(log_path)
 
             for y in range(self.board_size[1]):
                 for x in range(self.board_size[0]):
@@ -203,10 +200,9 @@ class Game:
                         pass
                     else:
                         self.map_squares[x][y].draw(self.screen)
-            self.agent.update()
             pygame.display.update()
-            clock.tick(1)
-        print(self.score)
+            clock.tick(100)
+        print(self.agent.q_table)
         pygame.quit()
 
     def load_image(self, file):
@@ -220,7 +216,6 @@ class Game:
 class Agent:
     def __init__(self):
         self.q_table = np.zeros((15, 4))
-        # self.q_table[0] = [1,2,6,4]
         self.square = None
         self.last_reward = 0
         self.score = 0
@@ -236,22 +231,30 @@ class Agent:
 
     def take_action(self):
         eps = 0.1
-        print(self.q_table)
+        # print(self.q_table)
         p = np.random.random()
         actions = [AGENT_UP, AGENT_DOWN, AGENT_RIGHT, AGENT_LEFT]
 
         if p < eps:
             j = np.random.choice(4)
         else:
+            print("Dude these are my options, leave me alone:", self.q_table[SQUARES[self.square][1]])
             j = np.argmax(self.q_table[SQUARES[self.square][1]])
-            print(j)
-            print(self.q_table[SQUARES[self.square][1]])
+            # print(j)
+            # print(self.q_table[SQUARES[self.square][1]])
         self.last_action = j
         self.last_state = self.square
         return actions[j]
 
-    def update(self):
-        self.q_table[self.last_state, self.last_action] = self.last_reward
+    def update(self, log_path):
+        while len(log_path) != 0:
+
+            square = log_path[0]
+            action = log_path[1]
+            reward = log_path[2]
+            for i in range(3, len(log_path), 3):
+                self.q_table[SQUARES[square][1]][action] = self.q_table[SQUARES[square][1]][action] + 0.1*(reward + 0.5**i*(self.q_table[SQUARES[log_path[i]][1]][log_path[i+1]]) - self.q_table[SQUARES[square][1]][action])
+            log_path = log_path[3:]
 
     # AGENT_RIGHT = pygame.USEREVENT + 1
     # AGENT_UP = pygame.USEREVENT + 2
@@ -320,7 +323,7 @@ class Reward(Unit):
 class Exit(Unit):
     def __init__(self):
         Unit.__init__(self)
-        self.value = 100
+        self.value = 10000
 
 
 def main():
