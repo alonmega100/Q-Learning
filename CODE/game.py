@@ -2,6 +2,7 @@ import random
 import time
 import pygame
 import numpy as np
+import pandas as pd
 
 SQUARES = {
     (0, 0): ((50, 50), 0),
@@ -21,6 +22,12 @@ SQUARES = {
     (4, 2): ((850, 450), 14),
     }
 
+DIRECTIONS = {
+    0: "Up",
+    1: "Down",
+    2: "Right",
+    3: "Left"
+}
 AGENT_RIGHT = pygame.USEREVENT + 1
 AGENT_UP = pygame.USEREVENT + 2
 AGENT_DOWN = pygame.USEREVENT + 3
@@ -56,6 +63,7 @@ class Game:
         coin1 = Reward()
         coin2 = Reward()
         coin3 = Reward()
+        coin4 = Reward()
         pipe = Exit()
 
         mario.set_image("../DATA/mario.png")
@@ -65,25 +73,28 @@ class Game:
         coin1.set_image("../DATA/coin.png")
         coin2.set_image("../DATA/coin.png")
         coin3.set_image("../DATA/coin.png")
+        coin4.set_image("../DATA/coin.png")
         pipe.set_image("../DATA/pipe.png")
 
-        mario.set_square((0, 1))
+        mario.set_square((0, 0))
         bowser.set_square((3, 1))
         coopa_troopa.set_square((1, 1))
-        goomba.set_square((2, 0))
-        coin1.set_square((4, 2))
-        coin2.set_square((2, 2))
-        coin3.set_square((0, 2))
+        goomba.set_square((3, 0))
+        coin1.set_square((0, 2))
+        coin2.set_square((2, 0))
+        coin3.set_square((2, 2))
+        coin4.set_square((4, 2))
         pipe.set_square((4, 0))
 
-        self.map_squares[0][0] = mario
-        self.map_squares[3][1] = bowser
-        self.map_squares[1][1] = coopa_troopa
-        self.map_squares[2][0] = goomba
-        self.map_squares[4][2] = coin1
-        self.map_squares[2][2] = coin2
-        self.map_squares[0][2] = coin3
-        self.map_squares[4][0] = pipe
+        self.map_squares[mario.get_square()[0]][mario.get_square()[1]] = mario
+        self.map_squares[bowser.get_square()[0]][bowser.get_square()[1]] = bowser
+        self.map_squares[coopa_troopa.get_square()[0]][coopa_troopa.get_square()[1]] = coopa_troopa
+        self.map_squares[goomba.get_square()[0]][goomba.get_square()[1]] = goomba
+        self.map_squares[coin1.get_square()[0]][coin1.get_square()[1]] = coin1
+        self.map_squares[coin2.get_square()[0]][coin2.get_square()[1]] = coin2
+        self.map_squares[coin3.get_square()[0]][coin3.get_square()[1]] = coin3
+        self.map_squares[coin4.get_square()[0]][coin4.get_square()[1]] = coin4
+        self.map_squares[pipe.get_square()[0]][pipe.get_square()[1]] = pipe
 
         self.units.append(mario)
         self.units.append(bowser)
@@ -92,6 +103,7 @@ class Game:
         self.units.append(coin1)
         self.units.append(coin2)
         self.units.append(coin3)
+        self.units.append(coin4)
         self.units.append(pipe)
 
         return mario
@@ -173,6 +185,7 @@ class Game:
                             mario = self.create_units()
                             self.agent.update(log_path)
                             first_run = True
+                            print("Its a W")
 
                         elif type(self.map_squares[new_square[0]][new_square[1]]).__name__ == "Enemy":
                             log_path.append(self.map_squares[new_square[0]][new_square[1]].get_value())
@@ -181,7 +194,6 @@ class Game:
                             first_run = True
 
                         elif type(self.map_squares[new_square[0]][new_square[1]]).__name__ == "Reward":
-
                             log_path.append(self.map_squares[new_square[0]][new_square[1]].get_value())
                             self.map_squares[new_square[0]][new_square[1]] = None
                             self.agent.update(log_path)
@@ -202,6 +214,11 @@ class Game:
                         self.map_squares[x][y].draw(self.screen)
             pygame.display.update()
             clock.tick(100)
+
+        # df = pd.DataFrame(self.agent.q_table, columns=["Up", "Down", "Right", "Left"])
+        # df.index = [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (0, 2), (1, 2), (2, 2), (3, 2), (4, 2)]
+        self.agent.q_table.to_json('../DATA/trained-model.json')
+
         print(self.agent.q_table)
         pygame.quit()
 
@@ -216,6 +233,22 @@ class Game:
 class Agent:
     def __init__(self):
         self.q_table = np.zeros((15, 4))
+        df = pd.DataFrame(self.q_table, columns=["Up", "Down", "Right", "Left"])
+        df.index = ["(0, 0)", "(1, 0)", "(2, 0)", "(3, 0)", "(4, 0)", "(0, 1)", "(1, 1)", "(2, 1)", "(3, 1)", "(4, 1)", "(0, 2)", "(1, 2)", "(2, 2)", "(3, 2)", "(4, 2)"]
+        print(df.loc['(0, 0)']["Up"])
+        print("Above me")
+        self.q_table = df
+        print(self.q_table)
+        try:
+            self.q_table = pd.read_json('../DATA/trained-model.json')
+            print(self.q_table)
+        except FileNotFoundError as error:
+            print(error)
+        # self.q_table = pd.DataFrame(np.zeros((15, 4)))
+        # self.q_table.columns = ["Up", "Down", "Right", "Left"]
+        # self.q_table.index = [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (0, 2), (1, 2),
+        #             (2, 2), (3, 2), (4, 2)]
+        # print(self.q_table)
         self.square = None
         self.last_reward = 0
         self.score = 0
@@ -231,29 +264,32 @@ class Agent:
 
     def take_action(self):
         eps = 0.1
-        # print(self.q_table)
         p = np.random.random()
         actions = [AGENT_UP, AGENT_DOWN, AGENT_RIGHT, AGENT_LEFT]
 
         if p < eps:
             j = np.random.choice(4)
+            print("infi fdw", j)
         else:
-            print("Dude these are my options, leave me alone:", self.q_table[SQUARES[self.square][1]])
-            j = np.argmax(self.q_table[SQUARES[self.square][1]])
-            # print(j)
-            # print(self.q_table[SQUARES[self.square][1]])
-        self.last_action = j
-        self.last_state = self.square
+            row_number = SQUARES[self.square][1]
+            j = self.q_table.iloc[row_number].argmax()
+            print("im a dumb programmer:")
+            print(self.q_table.iloc[row_number])
         return actions[j]
 
     def update(self, log_path):
+        print(log_path)
         while len(log_path) != 0:
 
             square = log_path[0]
             action = log_path[1]
             reward = log_path[2]
+            action = DIRECTIONS[action]
+
             for i in range(3, len(log_path), 3):
-                self.q_table[SQUARES[square][1]][action] = self.q_table[SQUARES[square][1]][action] + 0.1*(reward + 0.5**i*(self.q_table[SQUARES[log_path[i]][1]][log_path[i+1]]) - self.q_table[SQUARES[square][1]][action])
+                # temp_q_value = self.q_table.loc[SQUARES[square][1]][action].copy()
+                current_q_value = self.q_table.loc[str(square)][str(action)]
+                self.q_table.loc[str(square)][str(action)] = current_q_value + (reward + (0.5**i)*(np.max(self.q_table.loc[str(log_path[i])])) - current_q_value)
             log_path = log_path[3:]
 
     # AGENT_RIGHT = pygame.USEREVENT + 1
