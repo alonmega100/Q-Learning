@@ -109,14 +109,13 @@ class Game:
         return mario
 
     def run(self):
-        log_path = []
         pygame.init()
         mario = self.create_units()
         self.load_image(self.FILE)
         clock = pygame.time.Clock()
         first_run = True
         while self.running:
-
+            log_path = []
             self.screen.blit(self.image, self.rect)
             self.agent.set_square(mario.get_square())
             if first_run:
@@ -178,10 +177,13 @@ class Game:
                         if current_square[1] != 2:
                             new_square = (current_square[0], current_square[1] + 1)
 
+                    if new_square == (4, 1):
+                        print("Alon is ge")
                     if new_square != current_square:
                         mario.set_square(new_square)
                         if type(self.map_squares[new_square[0]][new_square[1]]).__name__ == "Exit":
                             log_path.append(self.map_squares[new_square[0]][new_square[1]].get_value())
+                            self.units = list()
                             mario = self.create_units()
                             self.agent.update(log_path)
                             first_run = True
@@ -189,6 +191,8 @@ class Game:
 
                         elif type(self.map_squares[new_square[0]][new_square[1]]).__name__ == "Enemy":
                             log_path.append(self.map_squares[new_square[0]][new_square[1]].get_value())
+
+                            self.units = list()
                             mario = self.create_units()
                             self.agent.update(log_path)
                             first_run = True
@@ -213,12 +217,12 @@ class Game:
                     else:
                         self.map_squares[x][y].draw(self.screen)
             pygame.display.update()
+            pygame.event.clear()
             clock.tick(100)
 
         # df = pd.DataFrame(self.agent.q_table, columns=["Up", "Down", "Right", "Left"])
         # df.index = [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (0, 2), (1, 2), (2, 2), (3, 2), (4, 2)]
         self.agent.q_table.to_json('../DATA/trained-model.json')
-
         print(self.agent.q_table)
         pygame.quit()
 
@@ -232,23 +236,19 @@ class Game:
 
 class Agent:
     def __init__(self):
-        self.q_table = np.zeros((15, 4))
-        df = pd.DataFrame(self.q_table, columns=["Up", "Down", "Right", "Left"])
+        self.q_table = np.zeros((15, 4), dtype=float)
+        df = pd.DataFrame(self.q_table, columns=["Up", "Down", "Right", "Left"], dtype=float)
         df.index = ["(0, 0)", "(1, 0)", "(2, 0)", "(3, 0)", "(4, 0)", "(0, 1)", "(1, 1)", "(2, 1)", "(3, 1)", "(4, 1)", "(0, 2)", "(1, 2)", "(2, 2)", "(3, 2)", "(4, 2)"]
-        print(df.loc['(0, 0)']["Up"])
-        print("Above me")
+
         self.q_table = df
-        print(self.q_table)
         try:
-            self.q_table = pd.read_json('../DATA/trained-model.json')
-            print(self.q_table)
+            self.q_table = pd.read_json('../DATA/trained-model.json', dtype=float)
         except FileNotFoundError as error:
             print(error)
         # self.q_table = pd.DataFrame(np.zeros((15, 4)))
         # self.q_table.columns = ["Up", "Down", "Right", "Left"]
         # self.q_table.index = [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (0, 2), (1, 2),
         #             (2, 2), (3, 2), (4, 2)]
-        # print(self.q_table)
         self.square = None
         self.last_reward = 0
         self.score = 0
@@ -269,16 +269,12 @@ class Agent:
 
         if p < eps:
             j = np.random.choice(4)
-            print("infi fdw", j)
         else:
             row_number = SQUARES[self.square][1]
             j = self.q_table.iloc[row_number].argmax()
-            print("im a dumb programmer:")
-            print(self.q_table.iloc[row_number])
         return actions[j]
 
     def update(self, log_path):
-        print(log_path)
         while len(log_path) != 0:
 
             square = log_path[0]
@@ -288,8 +284,8 @@ class Agent:
 
             for i in range(3, len(log_path), 3):
                 # temp_q_value = self.q_table.loc[SQUARES[square][1]][action].copy()
-                current_q_value = self.q_table.loc[str(square)][str(action)]
-                self.q_table.loc[str(square)][str(action)] = current_q_value + (reward + (0.5**i)*(np.max(self.q_table.loc[str(log_path[i])])) - current_q_value)
+                current_q_value = float(self.q_table.loc[str(square)][str(action)])
+                self.q_table.loc[str(square)][str(action)] = float(current_q_value + 1*(reward + (0.5**i)*(np.max(self.q_table.loc[str(log_path[i])])) - current_q_value))
             log_path = log_path[3:]
 
     # AGENT_RIGHT = pygame.USEREVENT + 1
