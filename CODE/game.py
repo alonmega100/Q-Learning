@@ -78,11 +78,11 @@ class Game:
         coin4.set_image("../DATA/coin.png")
         pipe.set_image("../DATA/pipe.png")
 
-        mario.set_square((0, 0))
-        bowser.set_square((3, 1))
+        mario.set_square((0, 2))
+        bowser.set_square((3, 2))
         coopa_troopa.set_square((1, 1))
         goomba.set_square((3, 0))
-        coin1.set_square((0, 2))
+        coin1.set_square((0, 0))
         coin2.set_square((2, 0))
         coin3.set_square((2, 2))
         coin4.set_square((4, 2))
@@ -118,6 +118,8 @@ class Game:
         first_run = True
         log_path = []
         while self.running:
+            if len(log_path) > 10:
+                log_path = log_path[1:]
             self.screen.blit(self.image, self.rect)
             self.agent.set_square(mario.get_square())
             if first_run:
@@ -189,7 +191,7 @@ class Game:
                         self.map_squares[x][y].draw(self.screen)
             pygame.display.update()
             pygame.event.clear()
-            clock.tick(10)
+            clock.tick(100)
 
         self.agent.q_table.to_json('../DATA/trained-model.json')
         print(self.agent.q_table)
