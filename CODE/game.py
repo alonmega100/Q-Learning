@@ -3,21 +3,23 @@ import time
 import pygame
 import numpy as np
 import pandas as pd
+from agent import Agent
+from Unit import *
 
 SQUARES = {
     (0, 0): ((50, 50), 0),
     (1, 0): ((250, 50), 1),
-    (0, 1): ((50, 250), 2),
-    (0, 2): ((50, 450), 3),
-    (1, 1): ((250, 250), 4),
-    (2, 0): ((450, 50), 5),
-    (3, 0): ((650, 50), 6),
+    (2, 0): ((450, 50), 2),
+    (3, 0): ((650, 50), 3),
+    (4, 0): ((850, 50), 4),
+    (0, 1): ((50, 250), 5),
+    (1, 1): ((250, 250), 6),
     (2, 1): ((450, 250), 7),
-    (1, 2): ((250, 450), 8),
-    (2, 2): ((450, 450), 9),
-    (3, 1): ((650, 250), 10),
-    (4, 0): ((850, 50), 11),
-    (4, 1): ((850, 250), 12),
+    (3, 1): ((650, 250), 8),
+    (4, 1): ((850, 250), 9),
+    (0, 2): ((50, 450), 10),
+    (1, 2): ((250, 450), 11),
+    (2, 2): ((450, 450), 12),
     (3, 2): ((650, 450), 13),
     (4, 2): ((850, 450), 14),
     }
@@ -114,8 +116,8 @@ class Game:
         self.load_image(self.FILE)
         clock = pygame.time.Clock()
         first_run = True
+        log_path = []
         while self.running:
-            log_path = []
             self.screen.blit(self.image, self.rect)
             self.agent.set_square(mario.get_square())
             if first_run:
@@ -123,92 +125,61 @@ class Game:
             else:
                 pygame.event.post(pygame.event.Event(self.agent.take_action()))
             for event in pygame.event.get():
-
                 if event.type == pygame.QUIT:
                     self.running = False
-
-                elif event.type == AGENT_UP or event.type == AGENT_DOWN or event.type == AGENT_RIGHT \
-                        or event.type == AGENT_LEFT or event.type == pygame.KEYDOWN:
-                    current_square = mario.get_square()
+                elif event.type == AGENT_UP or event.type == AGENT_DOWN or event.type == AGENT_RIGHT or event.type == AGENT_LEFT:
+                    state = mario.get_square()
+                    action = None
+                    reward = None
                     new_square = mario.get_square()
-                    if event.type == pygame.KEYDOWN:
-                        if event.key == pygame.K_DOWN:
-                            temp = mario.get_square()
-                            if temp[1] != 2:
-                                new_square = (temp[0], temp[1]+1)
-                                mario.set_square(new_square)
-                        elif event.key == pygame.K_RIGHT:
-                            temp = mario.get_square()
-                            if temp[0] != 4:
-                                new_square = (temp[0]+1, temp[1])
-                                mario.set_square(new_square)
-                        elif event.key == pygame.K_UP:
-                            temp = mario.get_square()
-                            if temp[1] != 0:
-                                new_square = (temp[0], temp[1]-1)
-                                mario.set_square(new_square)
-                        elif event.key == pygame.K_LEFT:
-                            temp = mario.get_square()
-                            if temp[0] != 0:
-                                new_square = (temp[0]-1, temp[1])
-                                mario.set_square(new_square)
-
-                    elif event.type == AGENT_RIGHT:
-                        log_path.append(current_square)
-                        log_path.append(2)
-                        if current_square[0] != 4:
-                            new_square = (current_square[0] + 1, current_square[1])
-
-                    elif event.type == AGENT_LEFT:
-                        log_path.append(mario.get_square())
-                        log_path.append(3)
-                        if current_square[0] != 0:
-                            new_square = (current_square[0] - 1, current_square[1])
-
-                    elif event.type == AGENT_UP:
-                        log_path.append(mario.get_square())
-                        log_path.append(0)
-                        if current_square[1] != 0:
-                            new_square = (current_square[0], current_square[1] - 1)
+                    if event.type == AGENT_UP:
+                        action = 0
+                        if state[1] != 0:
+                            new_square = (state[0], state[1] - 1)
 
                     elif event.type == AGENT_DOWN:
-                        log_path.append(mario.get_square())
-                        log_path.append(1)
-                        if current_square[1] != 2:
-                            new_square = (current_square[0], current_square[1] + 1)
+                        action = 1
+                        if state[1] != 2:
+                            new_square = (state[0], state[1] + 1)
 
-                    if new_square == (4, 1):
-                        print("Alon is ge")
-                    if new_square != current_square:
+                    elif event.type == AGENT_RIGHT:
+                        action = 2
+                        if state[0] != 4:
+                            new_square = (state[0] + 1, state[1])
+
+                    else:  # event.type == AGENT_LEFT:
+                        action = 3
+                        if state[0] != 0:
+                            new_square = (state[0] - 1, state[1])
+                    needs_reset = False
+
+                    if new_square != state:
                         mario.set_square(new_square)
-                        if type(self.map_squares[new_square[0]][new_square[1]]).__name__ == "Exit":
-                            log_path.append(self.map_squares[new_square[0]][new_square[1]].get_value())
-                            self.units = list()
-                            mario = self.create_units()
-                            self.agent.update(log_path)
-                            first_run = True
-                            print("Its a W")
+                        landed_object = self.map_squares[new_square[0]][new_square[1]]
+                        if type(landed_object).__name__ == "Exit":
+                            reward = landed_object.get_value()
+                            needs_reset = True
 
-                        elif type(self.map_squares[new_square[0]][new_square[1]]).__name__ == "Enemy":
-                            log_path.append(self.map_squares[new_square[0]][new_square[1]].get_value())
+                        elif type(landed_object).__name__ == "Enemy":
+                            reward = landed_object.get_value()
+                            needs_reset = True
 
-                            self.units = list()
-                            mario = self.create_units()
-                            self.agent.update(log_path)
-                            first_run = True
-
-                        elif type(self.map_squares[new_square[0]][new_square[1]]).__name__ == "Reward":
-                            log_path.append(self.map_squares[new_square[0]][new_square[1]].get_value())
+                        elif type(landed_object).__name__ == "Reward":
+                            reward = landed_object.get_value()
                             self.map_squares[new_square[0]][new_square[1]] = None
-                            self.agent.update(log_path)
                         else:  # New square is a black space
-                            log_path.append(-1)
-                            self.agent.update(log_path)
+                            reward = -1
 
                     else:  # Agent bumped into the wall
-                        mario.set_square(new_square)
-                        log_path.append(-2)
-                        self.agent.update(log_path)
+                        reward = -2
+
+                    log_path.append((state, action, reward))
+                    self.agent.update(log_path)
+                    if needs_reset:
+                        self.units = []
+                        mario = self.create_units()
+                        log_path = []
+                        first_run = True
 
             for y in range(self.board_size[1]):
                 for x in range(self.board_size[0]):
@@ -218,10 +189,8 @@ class Game:
                         self.map_squares[x][y].draw(self.screen)
             pygame.display.update()
             pygame.event.clear()
-            clock.tick(100)
+            clock.tick(10)
 
-        # df = pd.DataFrame(self.agent.q_table, columns=["Up", "Down", "Right", "Left"])
-        # df.index = [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (0, 2), (1, 2), (2, 2), (3, 2), (4, 2)]
         self.agent.q_table.to_json('../DATA/trained-model.json')
         print(self.agent.q_table)
         pygame.quit()
@@ -234,130 +203,6 @@ class Game:
         pygame.display.set_caption(f'size:{self.rect.size}')
 
 
-class Agent:
-    def __init__(self):
-        self.q_table = np.zeros((15, 4), dtype=float)
-        df = pd.DataFrame(self.q_table, columns=["Up", "Down", "Right", "Left"], dtype=float)
-        df.index = ["(0, 0)", "(1, 0)", "(2, 0)", "(3, 0)", "(4, 0)", "(0, 1)", "(1, 1)", "(2, 1)", "(3, 1)", "(4, 1)", "(0, 2)", "(1, 2)", "(2, 2)", "(3, 2)", "(4, 2)"]
-
-        self.q_table = df
-        try:
-            self.q_table = pd.read_json('../DATA/trained-model.json', dtype=float)
-        except FileNotFoundError as error:
-            print(error)
-        # self.q_table = pd.DataFrame(np.zeros((15, 4)))
-        # self.q_table.columns = ["Up", "Down", "Right", "Left"]
-        # self.q_table.index = [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (0, 2), (1, 2),
-        #             (2, 2), (3, 2), (4, 2)]
-        self.square = None
-        self.last_reward = 0
-        self.score = 0
-        self.last_action = 0
-        self.last_state = None
-
-    def set_square(self, square):
-        self.square = square
-
-    def reset(self):
-        self.score = 0
-        self.square = (0, 0)
-
-    def take_action(self):
-        eps = 0.1
-        p = np.random.random()
-        actions = [AGENT_UP, AGENT_DOWN, AGENT_RIGHT, AGENT_LEFT]
-
-        if p < eps:
-            j = np.random.choice(4)
-        else:
-            row_number = SQUARES[self.square][1]
-            j = self.q_table.iloc[row_number].argmax()
-        return actions[j]
-
-    def update(self, log_path):
-        while len(log_path) != 0:
-
-            square = log_path[0]
-            action = log_path[1]
-            reward = log_path[2]
-            action = DIRECTIONS[action]
-
-            for i in range(3, len(log_path), 3):
-                # temp_q_value = self.q_table.loc[SQUARES[square][1]][action].copy()
-                current_q_value = float(self.q_table.loc[str(square)][str(action)])
-                self.q_table.loc[str(square)][str(action)] = float(current_q_value + 1*(reward + (0.5**i)*(np.max(self.q_table.loc[str(log_path[i])])) - current_q_value))
-            log_path = log_path[3:]
-
-    # AGENT_RIGHT = pygame.USEREVENT + 1
-    # AGENT_UP = pygame.USEREVENT + 2
-    # AGENT_DOWN = pygame.USEREVENT + 3
-    # AGENT_LEFT = pygame.USEREVENT + 4
-
-
-class Unit:
-    def __init__(self):
-        self.value = 0
-        self.square = (0, 0)
-        self.position = (0, 0)
-        self.type = None
-        self.image_path = None
-        self.image = None
-
-    def set_image(self, path):
-        self.image_path = path
-        self.image = pygame.image.load(path)
-        self.image = pygame.transform.scale(self.image, (100, 100))
-
-    def move(self, new_position):
-        self.position = new_position
-
-    def draw(self, screen):
-        screen.blit(self.image, self.position)
-
-    def set_square(self, square):
-        self.square = square
-        self.set_position()
-
-    def get_square(self):
-        return self.square
-
-    def set_position(self, position=None):
-        if position is not None:
-            self.position = position
-
-        else:
-            self.position = SQUARES[self.square][0]
-
-    def get_value(self):
-        return self.value
-
-    def set_value(self, value):
-        self.value = value
-
-
-class Ally(Unit):
-    def __init__(self):
-        Unit.__init__(self)
-
-
-class Enemy(Unit):
-    def __init__(self):
-        Unit.__init__(self)
-        self.value = -1000
-
-
-class Reward(Unit):
-    def __init__(self):
-        Unit.__init__(self)
-        self.value = 5
-
-
-class Exit(Unit):
-    def __init__(self):
-        Unit.__init__(self)
-        self.value = 10000
-
-
 def main():
     game = Game()
     game.run()
@@ -365,6 +210,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-
