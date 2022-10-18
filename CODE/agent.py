@@ -3,6 +3,7 @@ import time
 import pygame
 import numpy as np
 import pandas as pd
+import runner
 
 SQUARES = {
     (0, 0): ((50, 50), 0),
@@ -61,7 +62,10 @@ class Agent:
         return actions[j]
 
     def update(self, log_path):
-        print(log_path)
+        if log_path[-1][2] == 99999999:
+            print("W", log_path)
+        else:
+            print(log_path)
         for i in range(len(log_path)):
             o_state, o_action, o_reward = log_path[i]
             o_state_index = SQUARES[o_state][1]
@@ -72,3 +76,11 @@ class Agent:
                 o_value = self.q_table.iloc[o_state_index][o_action]
                 self.q_table.iloc[o_state_index][o_action] = o_value + 0.1*(o_reward + (0.1 ** counter) * np.max(self.q_table.iloc[t_state_index]) - o_value)
                 counter += 1
+
+
+def main():
+    runner.main()
+
+
+if __name__ == '__main__':
+    main()

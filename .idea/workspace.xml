@@ -4,7 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f8ec2811-2259-453f-bb11-d8b2a24100d2" name="Changes" comment="" />
+    <list default="true" id="f8ec2811-2259-453f-bb11-d8b2a24100d2" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/CODE/Unit.py" beforeDir="false" afterPath="$PROJECT_DIR$/CODE/Unit.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CODE/agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/CODE/agent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CODE/game.py" beforeDir="false" afterPath="$PROJECT_DIR$/CODE/game.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CODE/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/CODE/runner.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DATA/trained-model.json" beforeDir="false" afterPath="$PROJECT_DIR$/DATA/trained-model.json" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -39,7 +45,7 @@
     &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;
   }
 }</component>
-  <component name="RunManager" selected="Python.game (1)">
+  <component name="RunManager" selected="Python.agent">
     <configuration name="Unit" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="AiLab" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -103,7 +109,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="game" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="runner (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="AiLab" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -115,7 +121,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="C:\Users\alon1\PycharmProjects\AiLab\CODE\game.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/CODE/runner.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -124,7 +130,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="runner" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="AiLab" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -136,7 +142,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/CODE/main.py" />
+      <option name="SCRIPT_NAME" value="C:\Users\alon1\PycharmProjects\new_repo\AiLab\CODE\runner.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -147,10 +153,11 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.game (1)" />
         <item itemvalue="Python.agent" />
+        <item itemvalue="Python.runner (1)" />
+        <item itemvalue="Python.game (1)" />
         <item itemvalue="Python.Unit" />
-        <item itemvalue="Python.main" />
+        <item itemvalue="Python.runner" />
       </list>
     </recent_temporary>
   </component>

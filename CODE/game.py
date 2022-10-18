@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from agent import Agent
 from Unit import *
-
+import runner
 SQUARES = {
     (0, 0): ((50, 50), 0),
     (1, 0): ((250, 50), 1),
@@ -117,6 +117,8 @@ class Game:
         clock = pygame.time.Clock()
         first_run = True
         log_path = []
+        number_of_tries = 1
+        wins = 0
         while self.running:
             if len(log_path) > 10:
                 log_path = log_path[1:]
@@ -161,6 +163,7 @@ class Game:
                         if type(landed_object).__name__ == "Exit":
                             reward = landed_object.get_value()
                             needs_reset = True
+                            wins += 1
 
                         elif type(landed_object).__name__ == "Enemy":
                             reward = landed_object.get_value()
@@ -182,6 +185,7 @@ class Game:
                         mario = self.create_units()
                         log_path = []
                         first_run = True
+                        number_of_tries += 1
 
             for y in range(self.board_size[1]):
                 for x in range(self.board_size[0]):
@@ -195,6 +199,8 @@ class Game:
 
         self.agent.q_table.to_json('../DATA/trained-model.json')
         print(self.agent.q_table)
+        print("Number of trys:", number_of_tries)
+        print("Number of Wins:", wins)
         pygame.quit()
 
     def load_image(self, file):
@@ -206,8 +212,7 @@ class Game:
 
 
 def main():
-    game = Game()
-    game.run()
+    runner.main()
 
 
 if __name__ == '__main__':
