@@ -1,8 +1,5 @@
-import random
-import time
 import pygame
-import numpy as np
-import pandas as pd
+import runner
 
 
 SQUARES = {
@@ -97,3 +94,12 @@ class Exit(Unit):
     def __init__(self):
         Unit.__init__(self)
         self.value = 99999999
+
+
+def main():
+    runner.main()
+
+
+if __name__ == '__main__':
+    main()
+

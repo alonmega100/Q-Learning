@@ -1,11 +1,9 @@
-import random
-import time
-import pygame
-import numpy as np
-import pandas as pd
+import runner
+
 from agent import Agent
 from Unit import *
-import runner
+
+
 SQUARES = {
     (0, 0): ((50, 50), 0),
     (1, 0): ((250, 50), 1),
@@ -53,7 +51,7 @@ class Game:
         self.running = True
         self.score = 0
         self.board_size = (5, 3)
-        self.map_squares = [[None for y in range(self.board_size[1])] for x in range(self.board_size[0])]
+        self.map_squares = [[None for _ in range(self.board_size[1])] for _ in range(self.board_size[0])]
 
         self.agent = Agent()
 
@@ -131,10 +129,9 @@ class Game:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
-                elif event.type == AGENT_UP or event.type == AGENT_DOWN or event.type == AGENT_RIGHT or event.type == AGENT_LEFT:
+                elif event.type == AGENT_UP or event.type == AGENT_DOWN or event.type == AGENT_RIGHT \
+                        or event.type == AGENT_LEFT:
                     state = mario.get_square()
-                    action = None
-                    reward = None
                     new_square = mario.get_square()
                     if event.type == AGENT_UP:
                         action = 0

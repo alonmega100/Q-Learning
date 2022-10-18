@@ -1,5 +1,3 @@
-import random
-import time
 import pygame
 import numpy as np
 import pandas as pd
@@ -46,7 +44,6 @@ class Agent:
         self.square = square
 
     def reset(self):
-        self.score = 0
         self.square = (0, 0)
 
     def take_action(self):
@@ -74,7 +71,8 @@ class Agent:
                 t_state, t_action, t_reward = log_path[j]
                 t_state_index = SQUARES[t_state][1]
                 o_value = self.q_table.iloc[o_state_index][o_action]
-                self.q_table.iloc[o_state_index][o_action] = o_value + 0.1*(o_reward + (0.1 ** counter) * np.max(self.q_table.iloc[t_state_index]) - o_value)
+                self.q_table.iloc[o_state_index][o_action]\
+                    = o_value + 0.1*(o_reward + (0.1 ** counter) * np.max(self.q_table.iloc[t_state_index]) - o_value)
                 counter += 1
 
 
